@@ -114,7 +114,7 @@ def executar_ataque_priorizado():
 
         # 6. ETAPA 2: Confirmação
         for _ in range(4):
-            if clicar('batalha_btn.png', 0.75, "Etapa 2: Confirmado combate final!", 5):
+            if clicar('ataque_rapido_btn.png', 0.75, "Etapa 2: Confirmado combate final!", 5):
                 return True
             time.sleep(1)
 
