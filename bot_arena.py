@@ -12,7 +12,8 @@ def localizar_seguro(imagem, confianca=0.8):
     """Busca uma imagem. Se não achar, não dá erro, apenas retorna Vazio (None)."""
     try:
         return pyautogui.locateOnScreen(f'imagens_arena/{imagem}', confidence=confianca)
-    except Exception:
+    except Exception as e:
+        print(f"🔎 Falha na visão ao buscar '{imagem}': {e}") # <-- Adicionamos esta linha
         return None
 
 def localizar_todos_seguro(imagem, confianca=0.8):
@@ -49,7 +50,7 @@ def executar_ataque_priorizado():
     """
     try:
         # 1. Acha o radar do usuário
-        eu = localizar_seguro('meu_perfil_arena.png', 0.35)
+        eu = localizar_seguro('meu_perfil_arena.png', 0.5)
         if not eu:
             print("⚠️ Radar: Não achei o seu perfil na tabela para referência.")
             time.sleep(3)
@@ -114,7 +115,7 @@ def executar_ataque_priorizado():
 
         # 6. ETAPA 2: Confirmação
         for _ in range(4):
-            if clicar('ataque_rapido_btn.png', 0.35, "Etapa 2: Confirmado combate final!", 5):
+            if clicar('ataque_rapido_btn.png', 0.8, "Etapa 2: Confirmado combate final!", 5):
                 return True
             time.sleep(1)
 
@@ -148,7 +149,7 @@ def bot_arena():
 
         # PRIORIDADE 2: LÓGICA DE COMBATE
         if executar_ataque_priorizado():
-            print("⚔️ Batalha iniciada. Aguardando fim do combate...")
+            # print("⚔️ Batalha iniciada. Aguardando fim do combate...")
             continue
 
         # PRIORIDADE 3: PÓS-COMBATE E ACELERAÇÃO
