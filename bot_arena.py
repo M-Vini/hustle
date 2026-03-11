@@ -149,7 +149,7 @@ def bot_arena():
 
         # PRIORIDADE 2: LÓGICA DE COMBATE
         if executar_ataque_priorizado():
-            # print("⚔️ Batalha iniciada. Aguardando fim do combate...")
+            print("⚔️ Batalha iniciada. Aguardando fim do combate...")
             continue
 
         # PRIORIDADE 3: PÓS-COMBATE E ACELERAÇÃO

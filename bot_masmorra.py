@@ -2,138 +2,191 @@ import pyautogui
 import time
 import random
 
-pyautogui.FAILSAFE = True
+# ==========================================
+# CONFIGURAÇÕES DE SEGURANÇA
+# ==========================================
+pyautogui.FAILSAFE = True 
 
-# ==========================================
-# FUNÇÕES DE AMORTECIMENTO
-# ==========================================
-def localizar_seguro(imagem, confianca=0.75):
+def localizar_seguro(imagem, confianca=0.8):
     try:
         return pyautogui.locateOnScreen(f'imagens_masmorra/{imagem}', confidence=confianca)
     except Exception:
         return None
 
-def localizar_todos_seguro(imagem, confianca=0.75):
+def localizar_todos_seguro(imagem, confianca=0.8):
     try:
         return list(pyautogui.locateAllOnScreen(f'imagens_masmorra/{imagem}', confidence=confianca))
     except Exception:
         return []
 
-def clicar(imagem, confianca=0.75, nome="", espera=1, mover_duration=0.3):
-    posicao = localizar_seguro(imagem, confianca)
-    if posicao:
-        x, y = pyautogui.center(posicao)
-        pyautogui.moveTo(x + random.randint(-5, 5), y + random.randint(-5, 5), duration=mover_duration)
-        pyautogui.click()
-        print(f"✅ {nome}")
-        time.sleep(espera)
+def clicar(imagem, confianca=0.8, nome="", espera=1):
+    try:
+        posicao = localizar_seguro(imagem, confianca)
+        if posicao:
+            x, y = pyautogui.center(posicao)
+            pyautogui.moveTo(x + random.randint(-5, 5), y + random.randint(-5, 5), duration=0.3)
+            pyautogui.click()
+            print(f"✅ {nome}")
+            time.sleep(espera)
+            return True
+        return False
+    except Exception:
+        return False
+
+def clicar_lista(imagem, confianca=0.8, nome="", espera=2):
+    """Procura TODAS as opções no mapa e clica na primeira que achar (Lógica da Catedral)."""
+    try:
+        itens = localizar_todos_seguro(imagem, confianca)
+        if itens:
+            alvo = itens[0]
+            x, y = pyautogui.center(alvo)
+            pyautogui.moveTo(x + random.randint(-5, 5), y + random.randint(-5, 5), duration=0.4)
+            pyautogui.click()
+            print(f"🗺️ {nome}")
+            time.sleep(espera)
+            return True
+        return False
+    except Exception:
+        return False
+
+def arrastar_mapa():
+    largura, altura = pyautogui.size()
+    centro_x = largura // 1.2
+    centro_y = altura // 2
+    pyautogui.moveTo(centro_x, centro_y)
+    pyautogui.dragTo(centro_x - 400, centro_y, duration=0.5, button='left')
+    time.sleep(1.5)
+
+def resolver_influencia_invisivel():
+    if localizar_seguro('finalizar_selecao_btn.png', 0.8):
+        print("⚖️ Tela de Influência detectada! Escolhendo bênção/maldição...")
+        if clicar('efeito_positivo.png', 0.8, "Selecionado Efeito Verde!", 1): pass
+        elif clicar('efeito_negativo.png', 0.8, "Selecionado Efeito Vermelho!", 1): pass
+        clicar('finalizar_selecao_btn.png', 0.8, "Efeito confirmado!", 3)
         return True
     return False
 
-# ==========================================
-# AÇÃO: ARRASTAR TROPAS (DRAG & DROP)
-# ==========================================
-def arrastar_tropas():
-    """Procura espaços vazios e arrasta os bonecos vivos para eles."""
-    slots_vazios = localizar_todos_seguro('slot_vazio.png', 0.8)
-    
-    if not slots_vazios:
-        return False # Não estamos na tela de posicionar tropas
+def preparar_esquadrao_masmorra():
+    # 1. Escaneia todos os sinais vitais da tela de tropas
+    slots_normais = localizar_todos_seguro('slot_vazio.png', 0.8)
+    slots_sacrificio = localizar_todos_seguro('slot_sacrificio.png', 0.8)
+    tem_posicionar = localizar_seguro('posicionar_melhores_btn.png', 0.8)
+    tem_ataque = localizar_seguro('ataque_rapido_btn.png', 0.8)
+    tem_pronto = localizar_seguro('pronto_btn.png', 0.8)
+    tem_finalizar = localizar_seguro('finalizar_selecao_btn.png', 0.8)
 
-    tropas = localizar_todos_seguro('base_tropa.png', 0.8)
-    
-    if not tropas:
-        print("⚠️ Sem tropas vivas disponíveis para arrastar!")
-        return False
+    # 2. A Trava de Segurança: Se não tem NENHUM DESSES, aborta!
+    if not (slots_normais or slots_sacrificio or tem_posicionar or tem_ataque or tem_pronto or tem_finalizar):
+        return False 
 
-    print(f"🧩 Posicionando {min(len(slots_vazios), len(tropas))} tropa(s)...")
+    # 3. Lógica de Preenchimento (Só age se tiver buraco faltando)
+    if slots_normais or slots_sacrificio:
+        print("✨ Tela de Esquadrão! Preenchendo buracos vazios...")
+        
+        if tem_posicionar:
+            clicar('posicionar_melhores_btn.png', 0.8, "Auto-preenchimento ativado!", 1.5)
+        else:
+            alvos_vazios = slots_normais if slots_normais else slots_sacrificio
+            tropas = localizar_todos_seguro('base_tropa.png', 0.8)
+            if alvos_vazios and tropas:
+                for i in range(min(len(alvos_vazios), len(tropas))):
+                    tropa_x, tropa_y = pyautogui.center(tropas[i])
+                    slot_x, slot_y = pyautogui.center(alvos_vazios[i])
+                    pyautogui.moveTo(tropa_x, tropa_y, duration=0.2)
+                    pyautogui.dragTo(slot_x, slot_y, duration=0.5, button='left')
+                    time.sleep(0.3)
 
-    # Faz o Drag & Drop (Arrasta do boneco para o buraco)
-    for i in range(min(len(slots_vazios), len(tropas))):
-        tropa_x, tropa_y = pyautogui.center(tropas[i])
-        slot_x, slot_y = pyautogui.center(slots_vazios[i])
-
-        pyautogui.moveTo(tropa_x, tropa_y, duration=0.2)
-        # Clica, segura e puxa até o slot
-        pyautogui.dragTo(slot_x, slot_y, duration=0.5, button='left')
-        time.sleep(0.3)
-
-    # Após arrastar, usa a sua estratégia genial de Ataque Rápido
-    if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!"):
-        return True
-    # Se for um Altar/Sacrifício ou chefe que não tem ataque rápido, clica no finalizar
-    elif clicar('finalizar_selecao_btn.png', 0.8, "Seleção finalizada!"):
-        return True
+    # 4. O Arremate (Finalmente ele chega aqui!)
+    if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!", 3): return True
+    elif clicar('pronto_btn.png', 0.8, "Tropa confirmada! Aguardando o parceiro...", 3): return True
+    elif clicar('finalizar_selecao_btn.png', 0.8, "Seleção finalizada (Sacrifício/Chefe)!", 3): return True
 
     return True
 
-# ==========================================
-# LÓGICA DE EXPLORAÇÃO DO MAPA
-# ==========================================
-def explorar_masmorra():
-    """Varredura inteligente do mapa e ações de combate."""
-    
-    # 1. Tenta arrastar tropas se a tela de esquadrão estiver aberta
-    if arrastar_tropas():
-        return True
-
-    # 2. Fecha pop-ups chatos ou recusa ressurreições com diamantes
-    clicar('fechar_x.png', 0.8, "Fechando janela/pop-up", 0.5)
-
-    # 3. Confirmação de movimentação (O jogo pede para confirmar o passo)
-    if clicar('mover_para_ca.png', 0.8, "Andando pelo mapa..."):
-        return True
-
-    # 4. Escaneia o mapa procurando ícones de Combate ou Sacrifício
-    if clicar('no_combate.png', 0.8, "Entrando em Combate (Machados)"):
-        return True
-    if clicar('no_sacrificio.png', 0.8, "Entrando no Altar de Sacrifício"):
-        return True
-
-    # 5. Recolhe recompensas do chão ou baús
-    clicar('recolher_premio.png', 0.8, "Pegando baú no caminho", 0.5)
-
-    return False
-
-# ==========================================
-# LOOP PRINCIPAL DO BOT
-# ==========================================
-def bot_masmorra():
-    print("🏰=== BOT DA MASMORRA 2.0 INICIADO ===🏰")
-    print("Mude para a janela do jogo! O bot assume em 5 segundos...")
+def iniciar_automacao_masmorra():
+    print("🏰=== BOT DA MASMORRA (COM LÓGICA DE NÓS) INICIADO ===🏰")
+    print("Mude para a janela do jogo agora! O bot assume em 5 segundos...")
     time.sleep(5)
-
-    estado_atual = "SAGUAO" 
+    
+    tentativas_sem_achar_nada = 0
+    sou_lider = False
 
     while True:
-        
-        if estado_atual == "SAGUAO":
-            if clicar('icone_masmorra_mapa.png', 0.8, "Abrindo Saguão"): pass
-            elif clicar('participar_btn.png', 0.8, "Participando da Masmorra!"):
-                clicar('posicionar_inicio_btn.png',0.8,"Posicionando tropas...")
-                clicar('confirmar_inicio_btn.png',0.8,"Confirmando tropas...")
-                estado_atual = "BUSCANDO_PARCEIRO"
-        
-        elif estado_atual == "BUSCANDO_PARCEIRO":
-            if clicar('aleatorio_inicio_btn.png', 0.8, "Parceiro Encontrado!"):
-                print("⚔️ Entrando no mapa... Preparando radar!")
-                time.sleep(6) # Carregamento
-                estado_atual = "EXPLORANDO_MAPA"
-            # elif localizar_seguro('parceiro_aleatorio_btn.png', 0.8):
-            #     estado_atual = "SAGUAO" # Fila caiu
-
-        elif estado_atual == "EXPLORANDO_MAPA":
-            # Chama a função que faz tudo lá dentro
-            explorar_masmorra()
+        # ==========================================
+        # PRIORIDADE 1: NAVEGAÇÃO DO CASTELO ATÉ O SAGUÃO
+        # ==========================================
+        if clicar('mapa_btn.png', 0.8, "Indo para o Mapa"): tentativas_sem_achar_nada = 0; continue
+        elif clicar('masmorra_btn.png', 0.8, "Abrindo Saguão da Masmorra"): tentativas_sem_achar_nada = 0; continue
             
-            # Condição de Saída (Fim da Masmorra ou Morte)
-            if clicar('terminar_jornada_btn.png', 0.8, "Masmorra concluída/Derrota. Saindo..."):
-                time.sleep(1)
-                clicar('sim_btn.png', 0.8, "Confirmando saída.")
-                print("🔄 Retornando ao Saguão para nova rodada...")
-                time.sleep(4)
-                estado_atual = "SAGUAO"
+        # ==========================================
+        # PRIORIDADE 1.5: SEQUÊNCIA DE ENTRADA (MINI-COMBO)
+        # ==========================================
+        elif clicar('participar_btn.png', 0.8, "Entrada: Participar"): tentativas_sem_achar_nada = 0; continue
+        
+        elif localizar_seguro('confirmar_inicio_btn.png', 0.8):
+            clicar('posicionar_melhores_inicio_btn.png', 0.8, "Entrada: Posicionando tropas...", 1.5)
+            clicar('confirmar_inicio_btn.png', 0.8, "Entrada: Confirmar Tropas", 2)
+            tentativas_sem_achar_nada = 0; continue
+            
+        elif clicar('aleatorio_inicio_btn.png', 0.8, "Entrada: Parceiro Aleatório"):
+            print("⏳ Entrando na fila da Masmorra...")
+            tentativas_sem_achar_nada = 0; sou_lider = False; continue
 
-        time.sleep(1.5)
+        elif localizar_seguro('aguardando_jogador.png', 0.8):
+            print("⏳ Aguardando jogador aleatório aceitar a partida...")
+            tentativas_sem_achar_nada = 0; continue
+            
+        elif clicar('aceitar_partida_btn.png', 0.8, "Aceitando Parceiro!", 4): tentativas_sem_achar_nada = 0; continue
 
-bot_masmorra()
+        # --- A DECISÃO DE LIDERANÇA SIMPLIFICADA ---
+        elif clicar('va_para_mapa_btn.png', 0.8, "Fechando aviso e entrando no mapa interno!", 3):
+            tentativas_sem_achar_nada = 0; continue
+        
+        # ==========================================
+        # PRIORIDADE 2: EMERGÊNCIAS E PREPARAÇÃO
+        # ==========================================
+        elif preparar_esquadrao_masmorra(): tentativas_sem_achar_nada = 0; continue
+        elif resolver_influencia_invisivel(): tentativas_sem_achar_nada = 0; continue
+        
+        elif clicar('fechar_x.png', 0.8, "Fechando Janela/Pop-up"): tentativas_sem_achar_nada = 0; continue
+        elif clicar('sim_btn.png', 0.8, "Confirmando (Sim)"): tentativas_sem_achar_nada = 0; continue
+
+        # ==========================================
+        # PRIORIDADE 3: TRANSIÇÕES LÁ DENTRO E SAÍDA
+        # ==========================================
+        elif clicar('inicio_btn.png', 0.8, "Saindo da tela de Vitória!", 2): tentativas_sem_achar_nada = 0; continue
+        elif clicar('ir_aqui_btn.png', 0.8, "Entrando no ponto de interesse...", 2): tentativas_sem_achar_nada = 0; continue
+        elif clicar('mover_para_ca.png', 0.8, "Confirmando passo no mapa...", 2): tentativas_sem_achar_nada = 0; continue
+        
+        # O botão agora é o verde!
+        elif clicar('terminar_jornada_btn.png', 0.8, "Masmorra concluída com sucesso! Saindo...", 2): tentativas_sem_achar_nada = 0; continue
+        elif clicar('recolher_premio.png', 0.8, "Recolhendo baú no chão", 1.5): tentativas_sem_achar_nada = 0; continue
+
+        # ==========================================
+        # PRIORIDADE 4: LÓGICA DE NÓS (SÓ PARA O LÍDER)
+        # ==========================================
+        # O bot vai escanear e tentar clicar do mais difícil/importante para o mais simples
+        elif clicar_lista('lacaio_node.png', 0.8, "Caminhando: Chefe/Lacaio"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('node_btn.png', 0.8, "Caminhando: Câmara dos Espíritos (Caveira)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('machados_btn.png', 0.8, "Caminhando: Combate Normal (Machados)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('no_espelho.png', 0.8, "Caminhando: Combate das Sombras (Espelho)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('no_influencia.png', 0.8, "Caminhando: Balança (Influência)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('no_sacrificio.png', 0.8, "Caminhando: Altar (Cálice)"): tentativas_sem_achar_nada = 0; continue
+
+        # ==========================================
+        # PRIORIDADE 5: ARRASTAR MAPA (FALLBACK)
+        # ==========================================
+        tentativas_sem_achar_nada += 1
+        
+        if tentativas_sem_achar_nada >= 3:
+            if sou_lider or not localizar_seguro('icone_masmorra_mapa.png', 0.8):
+                print("🗺️ Visão limpa. Puxando o mapa para o lado...")
+                arrastar_mapa()
+            tentativas_sem_achar_nada = 0 
+            
+        time.sleep(1)
+
+# ==========================================
+# RODA O PROGRAMA
+# ==========================================
+iniciar_automacao_masmorra()
