@@ -71,16 +71,20 @@ def preparar_esquadrao_masmorra():
     slots_normais = localizar_todos_seguro('slot_vazio.png', 0.8)
     slots_sacrificio = localizar_todos_seguro('slot_sacrificio.png', 0.8)
     tem_posicionar = localizar_seguro('posicionar_melhores_btn.png', 0.8)
-    tem_ataque = localizar_seguro('ataque_rapido_btn.png', 0.8)
-    tem_batalha = localizar_seguro('a_batalha_btn.png', 0.8) # <-- NOVO SINAL VITAL
+    tem_ataque_rapido = localizar_seguro('ataque_rapido_btn.png', 0.8) 
+    
+    tem_batalha_laranja = localizar_seguro('a_batalha_laranja_btn.png', 0.8)
+    tem_batalha_verde = localizar_seguro('a_batalha_verde_btn.png', 0.8)
+    
     tem_pronto = localizar_seguro('pronto_btn.png', 0.8)
     tem_finalizar = localizar_seguro('finalizar_selecao_btn.png', 0.8)
 
     # 2. A Trava de Segurança
-    if not (slots_normais or slots_sacrificio or tem_posicionar or tem_ataque or tem_batalha or tem_pronto or tem_finalizar):
+    if not (slots_normais or slots_sacrificio or tem_posicionar or tem_ataque_rapido or 
+            tem_batalha_laranja or tem_batalha_verde or tem_pronto or tem_finalizar):
         return False 
 
-    # 3. Lógica de Preenchimento (Só age se tiver buraco faltando)
+    # 3. Lógica de Preenchimento
     if slots_normais or slots_sacrificio:
         print("✨ Tela de Esquadrão! Preenchendo buracos vazios...")
         
@@ -97,9 +101,19 @@ def preparar_esquadrao_masmorra():
                     pyautogui.dragTo(slot_x, slot_y, duration=0.5, button='left')
                     time.sleep(0.3)
 
-    # 4. O Arremate
-    if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!", 3): return True
-    elif clicar('a_batalha_btn.png', 0.8, "Ataque Normal acionado (Rápido indisponível)!", 3): return True # <-- PLANO B
+    # 4. O Arremate (Com Inteligência Anti-Loop)
+    
+    # Verifica se o botão cinza está na tela
+    ataque_desativado = localizar_seguro('ataque_rapido_cinza.png', 0.8)
+    
+    # Só tenta usar o Ataque Rápido se ele NÃO estiver cinza
+    if not ataque_desativado:
+        if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!", 3): 
+            return True
+            
+    # PLANOS B, C e D (Para quando o Rápido falhar, não existir, ou estiver cinza)
+    if clicar('a_batalha_laranja_btn.png', 0.8, "À Batalha LARANJA acionado!", 3): return True
+    elif clicar('a_batalha_verde_btn.png', 0.8, "À Batalha VERDE acionado!", 3): return True
     elif clicar('pronto_btn.png', 0.8, "Tropa confirmada! Aguardando o parceiro...", 3): return True
     elif clicar('finalizar_selecao_btn.png', 0.8, "Seleção finalizada (Sacrifício/Chefe)!", 3): return True
 
