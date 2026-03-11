@@ -72,11 +72,12 @@ def preparar_esquadrao_masmorra():
     slots_sacrificio = localizar_todos_seguro('slot_sacrificio.png', 0.8)
     tem_posicionar = localizar_seguro('posicionar_melhores_btn.png', 0.8)
     tem_ataque = localizar_seguro('ataque_rapido_btn.png', 0.8)
+    tem_batalha = localizar_seguro('a_batalha_btn.png', 0.8) # <-- NOVO SINAL VITAL
     tem_pronto = localizar_seguro('pronto_btn.png', 0.8)
     tem_finalizar = localizar_seguro('finalizar_selecao_btn.png', 0.8)
 
-    # 2. A Trava de Segurança: Se não tem NENHUM DESSES, aborta!
-    if not (slots_normais or slots_sacrificio or tem_posicionar or tem_ataque or tem_pronto or tem_finalizar):
+    # 2. A Trava de Segurança
+    if not (slots_normais or slots_sacrificio or tem_posicionar or tem_ataque or tem_batalha or tem_pronto or tem_finalizar):
         return False 
 
     # 3. Lógica de Preenchimento (Só age se tiver buraco faltando)
@@ -96,8 +97,9 @@ def preparar_esquadrao_masmorra():
                     pyautogui.dragTo(slot_x, slot_y, duration=0.5, button='left')
                     time.sleep(0.3)
 
-    # 4. O Arremate (Finalmente ele chega aqui!)
+    # 4. O Arremate
     if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!", 3): return True
+    elif clicar('a_batalha_btn.png', 0.8, "Ataque Normal acionado (Rápido indisponível)!", 3): return True # <-- PLANO B
     elif clicar('pronto_btn.png', 0.8, "Tropa confirmada! Aguardando o parceiro...", 3): return True
     elif clicar('finalizar_selecao_btn.png', 0.8, "Seleção finalizada (Sacrifício/Chefe)!", 3): return True
 
