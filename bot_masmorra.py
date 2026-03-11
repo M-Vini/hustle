@@ -84,7 +84,7 @@ def preparar_esquadrao_masmorra():
             tem_batalha_laranja or tem_batalha_verde or tem_pronto or tem_finalizar):
         return False 
 
-    # 3. Lógica de Preenchimento
+    # 3. Lógica de Preenchimento (Arruma a casa primeiro)
     if slots_normais or slots_sacrificio:
         print("✨ Tela de Esquadrão! Preenchendo buracos vazios...")
         
@@ -101,20 +101,26 @@ def preparar_esquadrao_masmorra():
                     pyautogui.dragTo(slot_x, slot_y, duration=0.5, button='left')
                     time.sleep(0.3)
 
-    # 4. O Arremate (Com Inteligência Anti-Loop)
-    
-    # Verifica se o botão cinza está na tela
+    # ==================================================
+    # 4. A NOVA ORDEM: Confirmar que está Pronto PRIMEIRO!
+    # ==================================================
+    if clicar('pronto_btn.png', 0.8, "Tropa posicionada! Confirmando 'Pronto'...", 2): 
+        # Ele retorna True aqui para voltar pro loop e dar tempo do jogo liberar o ataque
+        return True 
+
+    # ==================================================
+    # 5. O Arremate (Só chega aqui se o Pronto já sumiu)
+    # ==================================================
     ataque_desativado = localizar_seguro('ataque_rapido_cinza.png', 0.8)
     
-    # Só tenta usar o Ataque Rápido se ele NÃO estiver cinza
+    # Tenta o rápido se não estiver cinza
     if not ataque_desativado:
         if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!", 3): 
             return True
             
-    # PLANOS B, C e D (Para quando o Rápido falhar, não existir, ou estiver cinza)
+    # Planos B, C e D
     if clicar('a_batalha_laranja_btn.png', 0.8, "À Batalha LARANJA acionado!", 3): return True
     elif clicar('a_batalha_verde_btn.png', 0.8, "À Batalha VERDE acionado!", 3): return True
-    elif clicar('pronto_btn.png', 0.8, "Tropa confirmada! Aguardando o parceiro...", 3): return True
     elif clicar('finalizar_selecao_btn.png', 0.8, "Seleção finalizada (Sacrifício/Chefe)!", 3): return True
 
     return True
@@ -181,13 +187,17 @@ def iniciar_automacao_masmorra():
         # ==========================================
         # PRIORIDADE 4: LÓGICA DE NÓS (SÓ PARA O LÍDER)
         # ==========================================
-        # O bot vai escanear e tentar clicar do mais difícil/importante para o mais simples
-        elif clicar_lista('lacaio_node.png', 0.8, "Caminhando: Chefe/Lacaio"): tentativas_sem_achar_nada = 0; continue
-        elif clicar_lista('node_btn.png', 0.8, "Caminhando: Câmara dos Espíritos (Caveira)"): tentativas_sem_achar_nada = 0; continue
-        elif clicar_lista('machados_btn.png', 0.8, "Caminhando: Combate Normal (Machados)"): tentativas_sem_achar_nada = 0; continue
-        elif clicar_lista('no_espelho.png', 0.8, "Caminhando: Combate das Sombras (Espelho)"): tentativas_sem_achar_nada = 0; continue
-        elif clicar_lista('no_influencia.png', 0.8, "Caminhando: Balança (Influência)"): tentativas_sem_achar_nada = 0; continue
-        elif clicar_lista('no_sacrificio.png', 0.8, "Caminhando: Altar (Cálice)"): tentativas_sem_achar_nada = 0; continue
+        # Reduzimos a confiança para 0.75 para o robô não se confundir com as animações de brilho
+        elif clicar_lista('lacaio_node.png', 0.75, "Caminhando: Chefe/Lacaio"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('node_btn.png', 0.75, "Caminhando: Câmara dos Espíritos (Caveira)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('machados_btn.png', 0.75, "Caminhando: Combate Difícil (Machados)"): tentativas_sem_achar_nada = 0; continue
+        
+        # <-- O NOVO CAMINHO ADICIONADO AQUI -->
+        elif clicar_lista('no_espada.png', 0.75, "Caminhando: Combate Normal (Espada)"): tentativas_sem_achar_nada = 0; continue
+        
+        elif clicar_lista('no_espelho.png', 0.75, "Caminhando: Combate das Sombras (Espelho)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('no_influencia.png', 0.75, "Caminhando: Balança (Influência)"): tentativas_sem_achar_nada = 0; continue
+        elif clicar_lista('no_sacrificio.png', 0.75, "Caminhando: Altar (Cálice)"): tentativas_sem_achar_nada = 0; continue
 
         # ==========================================
         # PRIORIDADE 5: ARRASTAR MAPA (FALLBACK)
