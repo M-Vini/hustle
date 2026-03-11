@@ -22,7 +22,9 @@ def localizar_todos_seguro(imagem, confianca=0.8):
 def clicar(imagem, confianca=0.8, nome="", espera=1):
     try:
         posicao = localizar_seguro(imagem, confianca)
-        if posicao:
+        
+        # FILTRO ANTI-ALUCINAÇÃO: Ignora se a imagem for detectada grudada no canto superior (0,0)
+        if posicao and posicao.top > 30 and posicao.left > 30:
             x, y = pyautogui.center(posicao)
             pyautogui.moveTo(x + random.randint(-5, 5), y + random.randint(-5, 5), duration=0.3)
             pyautogui.click()
@@ -58,12 +60,36 @@ def arrastar_mapa():
     time.sleep(1.5)
 
 def resolver_influencia_invisivel():
+    """Identifica a balança, usa o 'Pronto' como bússola e confirma."""
+    
+    # TRAVA DE SEGURANÇA: Se tiver o buraco azul do sacrifício, NÃO é balança! Aborta.
+    if localizar_seguro('slot_sacrificio.png', 0.8):
+        return False
+
+    # A ÂNCORA: O botão de finalizar seleção (que só aparece lá dentro)
     if localizar_seguro('finalizar_selecao_btn.png', 0.8):
-        print("⚖️ Tela de Influência detectada! Escolhendo bênção/maldição...")
-        if clicar('efeito_positivo.png', 0.8, "Selecionado Efeito Verde!", 1): pass
-        elif clicar('efeito_negativo.png', 0.8, "Selecionado Efeito Vermelho!", 1): pass
-        clicar('finalizar_selecao_btn.png', 0.8, "Efeito confirmado!", 3)
+        print("⚖️ Tela de Influência detectada!")
+        
+        # A BÚSSOLA: Acha o botão Pronto para saber de qual lado nós estamos
+        pos_pronto = localizar_seguro('pronto_btn.png', 0.8)
+        
+        if pos_pronto:
+            pronto_x, pronto_y = pyautogui.center(pos_pronto)
+            
+            # MATEMÁTICA: Move o mouse 100 pixels para CIMA do Pronto (Exatamente no meio do ícone)
+            print("🎯 Selecionando o efeito acima do botão Pronto...")
+            pyautogui.moveTo(pronto_x, pronto_y - 100, duration=0.3)
+            pyautogui.click()
+            time.sleep(1)
+            
+            # Agora sim ele aperta o Pronto para travar a escolha
+            clicar('selecionar_bencao_btn.png', 0.8, "Efeito selecionado!", 1.5)
+            clicar('pronto_btn.png', 0.8, "Efeito travado no Pronto!", 1.5)
+        
+        # Tenta finalizar a seleção (O líder aperta isso quando os dois terminarem)
+        clicar('finalizar_selecao_btn.png', 0.8, "Apertando em Finalizar Seleção...", 2)
         return True
+        
     return False
 
 def preparar_esquadrao_masmorra():
@@ -165,22 +191,26 @@ def iniciar_automacao_masmorra():
             tentativas_sem_achar_nada = 0; continue
         
         # ==========================================
-        # PRIORIDADE 2: EMERGÊNCIAS E PREPARAÇÃO
+        # PRIORIDADE 2: EMERGÊNCIAS, PREPARAÇÃO E TRANSIÇÕES IMPORTANTES
         # ==========================================
-        elif preparar_esquadrao_masmorra(): tentativas_sem_achar_nada = 0; continue
+        # 1º O Botão Verde de entrar nas salas
+        elif clicar('ir_aqui_btn.png', 0.8, "Entrando no ponto de interesse...", 2): tentativas_sem_achar_nada = 0; continue
+
+        # 2º A Balança DEVE vir antes do esquadrão!
         elif resolver_influencia_invisivel(): tentativas_sem_achar_nada = 0; continue
         
+        # 3º O Esquadrão/Tropas
+        elif preparar_esquadrao_masmorra(): tentativas_sem_achar_nada = 0; continue
+
         elif clicar('fechar_x.png', 0.8, "Fechando Janela/Pop-up"): tentativas_sem_achar_nada = 0; continue
         elif clicar('sim_btn.png', 0.8, "Confirmando (Sim)"): tentativas_sem_achar_nada = 0; continue
 
         # ==========================================
-        # PRIORIDADE 3: TRANSIÇÕES LÁ DENTRO E SAÍDA
+        # PRIORIDADE 3: SAÍDA E MAPA
         # ==========================================
         elif clicar('inicio_btn.png', 0.8, "Saindo da tela de Vitória!", 2): tentativas_sem_achar_nada = 0; continue
-        elif clicar('ir_aqui_btn.png', 0.8, "Entrando no ponto de interesse...", 2): tentativas_sem_achar_nada = 0; continue
         elif clicar('mover_para_ca.png', 0.8, "Confirmando passo no mapa...", 2): tentativas_sem_achar_nada = 0; continue
         
-        # O botão agora é o verde!
         elif clicar('terminar_jornada_btn.png', 0.8, "Masmorra concluída com sucesso! Saindo...", 2): tentativas_sem_achar_nada = 0; continue
         elif clicar('recolher_premio.png', 0.8, "Recolhendo baú no chão", 1.5): tentativas_sem_achar_nada = 0; continue
 
