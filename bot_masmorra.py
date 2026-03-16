@@ -141,7 +141,7 @@ def preparar_esquadrao_masmorra():
     
     # Tenta o rápido se não estiver cinza
     if not ataque_desativado:
-        if clicar('ataque_rapido_btn.png', 0.8, "Ataque Rápido acionado!", 3): 
+        if clicar('ataque_rapido_btn.png', 0.9, "Ataque Rápido acionado!", 3): 
             return True
             
     # Planos B, C e D
@@ -187,7 +187,7 @@ def iniciar_automacao_masmorra():
         elif clicar('aceitar_partida_btn.png', 0.8, "Aceitando Parceiro!", 4): tentativas_sem_achar_nada = 0; continue
 
         # --- A DECISÃO DE LIDERANÇA SIMPLIFICADA ---
-        elif clicar('va_para_mapa_btn.png', 0.8, "Fechando aviso e entrando no mapa interno!", 3):
+        elif clicar('va_para_o_mapa_btn.png', 0.8, "Fechando aviso e entrando no mapa interno!", 3):
             tentativas_sem_achar_nada = 0; continue
         
         # ==========================================
