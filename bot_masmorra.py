@@ -194,7 +194,7 @@ def iniciar_automacao_masmorra():
         # PRIORIDADE 2: EMERGÊNCIAS, PREPARAÇÃO E TRANSIÇÕES IMPORTANTES
         # ==========================================
         # 1º O Botão Verde de entrar nas salas
-        elif clicar('ir_aqui_btn.png', 0.8, "Entrando no ponto de interesse...", 2): tentativas_sem_achar_nada = 0; continue
+        elif clicar('ir_aqui_bencao_btn.png', 0.5, "Entrando no ponto de interesse...", 2): tentativas_sem_achar_nada = 0; continue
 
         # 2º A Balança DEVE vir antes do esquadrão!
         elif resolver_influencia_invisivel(): tentativas_sem_achar_nada = 0; continue
